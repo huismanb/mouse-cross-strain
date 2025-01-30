@@ -17,19 +17,16 @@ library(ggplot2)
 plan("sequential")
 date=""
 
-cmap <- c("#D7B5A6",
-          "#4E79A7","#D37295","#A0CBE8",
+cmap <- c("#D7B5A6","#4E79A7","#D37295","#A0CBE8",
           "#F28E2B","#59A14F","#FFBE7D","#8CD17D","#B6992D","#F1CE63",
           "#D4A6C8","#86BCB6","#E15759","#FF9D9A","#499894","#BAB0AC",
-          "#FABFD2","#B07AA1","#9D7660"
-)
+          "#FABFD2","#B07AA1","#9D7660")
 
 #############
 seurat_table <- readRDS( "Rdata/cross-strain_seurat-table.rds")
 
 ############
 #Label clusters
-# increase # of clusters called for improved granularity
 seurat_table <- FindClusters(seurat_table, resolution = 3)
 #seurat_table <- RunUMAP(seurat_table, dims = 1:30, seed.use = 123)
 
@@ -72,7 +69,7 @@ DimPlot(seurat_table, reduction="umap", label=F, repel=T, pt.size=2, split.by='g
 dev.off()
 
 #################################
-#Plot umap as a density plot
+#Plot UMAP as a density plot
 library(MASS)
 library(BuenColors)
 
