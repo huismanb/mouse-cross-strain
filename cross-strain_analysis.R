@@ -28,35 +28,6 @@ cmap <- c("#D7B5A6",
 seurat_table <- readRDS( "Rdata/cross-strain_seurat-table.rds")
 
 ############
-# Heatmap
-markers <- FindAllMarkers(seurat_table, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-markers %>%
-  group_by(cluster) %>%
-  top_n(n = 20, wt = avg_log2FC) -> top10
-heatmap_features = top10$gene
-
-breakslist = seq(1,3,by=0.01)
-pdf( paste0("figures/markers_heatmap_purple_dn-only_3strain_",date,".pdf" ), height=15, width=7 )
-DoHeatmap(subset(seurat_table, downsample=100), features = heatmap_features,angle=90, disp.min=0.5, size=4) + theme(axis.text.y.left = element_text(face = "italic"))+ 
-  scale_fill_gradientn(colors = colorRampPalette((brewer.pal(n=9, name="Purples")))(length(breakslist))) 
-dev.off()
-
-## DotPlot
-pdf( paste0("figures/dotplot_TFs_dn-only_3strain_",date,".pdf"), height=6, width=10 )
-DotPlot(seurat_table, features=(c('Myog','Neurod1','Aire',
-                                  "Grhl1",
-                                  "Foxi1",
-                                  "Pou2f3",
-                                  "Sox8","Spib","Hnf4g","Hnf4a","Foxj1",
-                                  "Foxn1","Trp63","Trp73","Foxi2","Ptf1a","Foxa2","Foxa3","Foxa1","Spdef","Gata3"
-)),
-cols=c("lightgray","#3F007D"), dot.min = 0.05, dot.scale=8 ) + 
-  theme(axis.text.x = element_text(angle = 90,  vjust = 0.5, hjust=1)) +
-  theme(axis.text.x = element_text(face = "italic"))+
-  scale_y_discrete(limits=rev) #reverse y-direction
-dev.off()
-
-#########
 #Label clusters
 # increase # of clusters called for improved granularity
 seurat_table <- FindClusters(seurat_table, resolution = 3)
@@ -101,7 +72,7 @@ DimPlot(seurat_table, reduction="umap", label=F, repel=T, pt.size=2, split.by='g
 dev.off()
 
 #################################
-#plot umap as a density plot
+#Plot umap as a density plot
 library(MASS)
 library(BuenColors)
 
@@ -185,61 +156,3 @@ ggplot(cluster_df, aes(x = factor(celltype), y = Freq, fill = strain)) +
   scale_fill_manual(values = c("grey", "white",'#494fc2')) + ylab('Percentage of mimetic cells') + 
   theme(axis.text.y = element_text(color = "black", size = 10, angle = 0, hjust = .5, vjust = .5, face = "plain"))
 dev.off()  
-
-##############################
-# HEATMAP 
-markers <- FindAllMarkers(seurat_table, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-markers %>%
-  group_by(cluster) %>%
-  top_n(n = 20, wt = avg_log2FC) -> top10
-heatmap_features = top10$gene
-
-breakslist = seq(1,3,by=0.01)
-pdf( paste0("figures/markers_heatmap_purple_",date,".pdf" ), height=15, width=7 )
-DoHeatmap(subset(seurat_table, downsample=100), features = heatmap_features,angle=90, disp.min=0.5, size=4, group.colors=cmap) + theme(axis.text.y.left = element_text(face = "italic"))+ #NoLegend() + #size changes cluster label size
-  scale_fill_gradientn(colors = colorRampPalette((brewer.pal(n=9, name="Purples")))(length(breakslist))) 
-dev.off()
-
-#select features
-heatmap_features = c('Acta1','Ckm','Myl1','Mymx','Cox8b','Dlk1','Tnnt3',
-                     'Nrgn','Sh2d6','Alox5ap','Dclk1','Luzp2','Cntnap5a',
-                     'Bex4','Scn2a','Dcc','Tas2r105','Nrxn3','Gnat3',
-                     'Gp2','Prg2','Cldn13','Hamp','Ccl20','Ccl9',
-                     'Snap25','Cacna2d1','Chga','Chgb','Stxbp5l',
-                     'Lypd8','Nos2','Fabp9','Cd70','Igf1',
-                     'Rptn','Aqp5','Aqp4','Krt5','Spink5',
-                     'Ecm1','Cyp2b19','Lingo2',
-                     'Csta1','Ivl','Krtdap','Krt1','Lor','Klk5','Klk6','Them5',
-                     'Ccdc153','Sntn','Spag17','Tekt1','Rp1')
-
-breakslist = seq(1,3,by=0.01)
-pdf( paste0("figures/markers_heatmap_purple_select_",date,".pdf" ), height=8, width=7 )
-DoHeatmap(subset(seurat_table, downsample=50), features = heatmap_features,angle=90, disp.min=0.5, size=4, group.colors=cmap) + theme(axis.text.y.left = element_text(face = "italic"))+ #NoLegend() + #size changes cluster label size
-  scale_fill_gradientn(colors = colorRampPalette((brewer.pal(n=9, name="Purples")))(length(breakslist))) 
-dev.off()
-
-##############################
-## overlay mouse signatures from Michelson et al Cell paper
-setwd("/signatures_mouse")
-idx <- list.files()[grepl("_sig_", list.files())]
-sig_list <- list()
-for (i in idx ) {
-  sig <- read.delim(i,header=T, sep="\t")
-  sig <- sig[,1]
-  sig_name <- substr(i, 10, nchar(i)-30)
-  sig_list[[sig_name]] <- sig
-  seurat_table <- AddModuleScore(seurat_table, features=as.data.frame(sig), name=sig_name)
-}
-
-pdf( paste0("figures/overlay_mouse_signatures_",date,".pdf" ), height=15, width=15 )
-FeaturePlot(seurat_table, features=c(
-  "Tuft11", "Tuft21",
-  "Muscle1","Ciliated1", 
-  "Neuroendocrine1","Ptf1a+ ductal1", "Mcell1", 
-  "Gut1", "Goblet1", "Lung, basal1",   
-  "Skin, basal1", "Skin, keratinized1",
-  "Ionocyte1"
-), order=T, min.cutoff="q75",pt.size=1, cols=c("lightgray","#3F007D"))
-dev.off()
-
-
