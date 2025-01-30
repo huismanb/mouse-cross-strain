@@ -17,12 +17,10 @@ library(ggplot2)
 plan("sequential")
 date=""
 
-cmap <- c("#D7B5A6",
-          "#4E79A7","#D37295","#A0CBE8",
+cmap <- c("#D7B5A6","#4E79A7","#D37295","#A0CBE8",
           "#F28E2B","#59A14F","#FFBE7D","#8CD17D","#B6992D","#F1CE63",
           "#D4A6C8","#86BCB6","#E15759","#FF9D9A","#499894","#BAB0AC",
-          "#FABFD2","#B07AA1","#9D7660"
-)
+          "#FABFD2","#B07AA1","#9D7660")
 
 #############
 # Initialize the Seurat object with the raw (non-normalized data)
@@ -103,21 +101,16 @@ custom_hto_assignnment <- function(seurat_table, cutoff_list){
 dat = Read10X(data.dir='/DN/')
 seurat_table_dn = initial_fn(dat,'dn')
 
-#picking cutoffs for hashtags
-pdf( paste0("figures/hto_ridgeplots_DN_",date,".pdf" ), height=6, width=14 ) #default layer is 'data'
 RidgePlot(seurat_table_dn, assay = "HTO", features = rownames(seurat_table_dn[["HTO"]])[1:8], ncol = 4)
-dev.off()
 
-#Custom HTO cutoffs:
+#HTO cutoffs:
 cutoff_dn = c(2, 2, 1.5 , 1.5 , 2, 2, 1.5 , 1.5)
 seurat_table_dn <- custom_hto_assignnment(seurat_table_dn, cutoff_dn)
 
 #Show ridgeplot once added custom cutoffs
 Idents(seurat_table_dn)<-"hash.ident"
 
-pdf( paste0("figures/hto_ridgeplots_DN_aftercustomcutoff_",date,".pdf" ), height=6, width=14 ) #default layer is 'data'
 RidgePlot(seurat_table_dn, assay = "HTO", features = rownames(seurat_table_dn[["HTO"]])[1:8], ncol = 4)
-dev.off()
 
 seurat_table=seurat_table_dn
 
@@ -125,7 +118,7 @@ seurat_table=seurat_table_dn
 ###### filter data
 seurat_table[["percent.mt"]] <- PercentageFeatureSet(seurat_table, pattern = "^mt-")
 
-# QC figure
+#QC
 x <- ggplot( seurat_table@meta.data, aes( x=orig.ident, y=nFeature_RNA ) ) +
   geom_hline( yintercept=9000, color="red" ) + #line where cutoff is
   geom_hline( yintercept=300, color="red" ) + #line where cutoff is
@@ -154,32 +147,6 @@ dev.off()
 seurat_table <- subset(seurat_table, subset = percent.mt < 12.5)
 seurat_table <- subset(seurat_table, subset = nFeature_RNA > 300) 
 seurat_table <- subset(seurat_table, subset = nFeature_RNA < 9000)
-##### 
-x <- ggplot( seurat_table@meta.data, aes( x=orig.ident, y=nFeature_RNA ) ) +
-  geom_hline( yintercept=9000, color="red" ) +
-  geom_hline( yintercept=300, color="red" ) +
-  geom_violin( fill="steelblue" ) +
-  geom_boxplot(width=0.1, color="grey", alpha=0.2, outlier.shape=NA) +
-  theme_bw() +
-  xlab("")
-
-y <- ggplot( seurat_table@meta.data, aes( x=orig.ident, y=nCount_RNA ) ) +
-  geom_violin( fill="pink" ) +
-  geom_boxplot(width=0.1, color="grey", alpha=0.2, outlier.shape=NA) +
-  theme_bw() +
-  xlab("")
-
-z <- ggplot( seurat_table@meta.data, aes( x=orig.ident, y=percent.mt ) ) +
-  geom_hline( yintercept=12.5, color="red" ) +
-  geom_violin( fill="orchid4" ) +
-  geom_boxplot(width=0.1, color="grey", alpha=0.2, outlier.shape=NA) +
-  theme_bw() +
-  xlab("")
-
-pdf( paste0("figures/qc_violin_postfilter_",date,".pdf" ), height=3, width=8 )
-plot_grid( x,y,z, ncol=3 )
-dev.off()
-
 #####
 #normalize data
 seurat_table <- NormalizeData(seurat_table, normalization.method = "LogNormalize", scale.factor = 10000)
